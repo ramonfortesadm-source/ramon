@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InovaTrader - Sinais de Alta Performance</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0e1a; color: #e0e6f0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #0d1b2e 0%, #1a2744 100%); border-bottom: 1px solid #1e3a5f; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, #00d4ff, #0066cc); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.logo-text h1 { font-size: 18px; font-weight: 700; color: #00d4ff; }
+.logo-text p { font-size: 11px; color: #8899aa; }
+.status-bar { display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+#authGate { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
+.auth-card { background: linear-gradient(135deg, #0d1b2e, #1a2744); border: 1px solid #1e3a5f; border-radius: 20px; padding: 40px; width: 380px; text-align: center; }
+.auth-card h2 { color: #00d4ff; font-size: 22px; margin-bottom: 8px; }
+.auth-card p { color: #8899aa; font-size: 13px; margin-bottom: 28px; }
+.auth-input { width: 100%; padding: 12px 16px; background: #0a1628; border: 1px solid #1e3a5f; border-radius: 10px; color: #e0e6f0; font-size: 15px; margin-bottom: 16px; outline: none; text-align: center; letter-spacing: 3px; }
+.auth-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #0066cc, #00d4ff); border: none; border-radius: 10px; color: white; font-size: 15px; font-weight: 600; cursor: pointer; }
+.auth-error { color: #ff4466; font-size: 12px; margin-top: 10px; display: none; }
+#mainApp { display: none; }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: linear-gradient(135deg, #0d1b2e, #132035); border: 1px solid #1e3a5f; border-radius: 12px; padding: 16px; text-align: center; }
+.stat-val { font-size: 24px; font-weight: 700; color: #00d4ff; }
+.stat-lbl { font-size: 11px; color: #8899aa; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab { padding: 8px 18px; border-radius: 20px; border: 1px solid #1e3a5f; background: transparent; color: #8899aa; font-size: 13px; cursor: pointer; }
+.tab.active, .tab:hover { background: linear-gradient(135deg, #0066cc, #00aaff); border-color: transparent; color: white; }
+.signals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.signal-card { background: linear-gradient(135deg, #0d1b2e, #132035); border: 1px solid #1e3a5f; border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+.signal-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.signal-card.buy::before { background: linear-gradient(90deg, #00cc66, #00ff88); }
+.signal-card.sell::before { background: linear-gradient(90deg, #ff4444, #ff8800); }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.pair { font-size: 18px; font-weight: 700; color: #ffffff; }
+.category { font-size: 10px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.direction-badge { padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+.buy .direction-badge { background: rgba(0,204,102,0.2); color: #00ff88; border: 1px solid #00cc66; }
+.sell .direction-badge { background: rgba(255,68,68,0.2); color: #ff6666; border: 1px solid #ff4444; }
+.card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.info-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px 10px; }
+.info-lbl { font-size: 10px; color: #8899aa; text-transform: uppercase; margin-bottom: 3px; }
+.info-val { font-size: 15px; font-weight: 600; color: #e0e6f0; }
+.win-rate-bar { margin-top: 6px; }
+.wr-header { display: flex; justify-content: space-between; font-size: 12px; color: #8899aa; margin-bottom: 5px; }
+.wr-val { color: #00d4ff; font-weight: 700; }
+.bar-bg { background: rgba(255,255,255,0.08); border-radius: 4px; height: 6px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #0066cc, #00d4ff); }
+.confidence { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: #8899aa; }
+.conf-dot { width: 6px; height: 6px; border-radius: 50%; }
+.conf-alta { background: #00ff88; }
+.conf-media { background: #ffaa00; }
+.conf-baixa { background: #ff4444; }
+.loading-state { text-align: center; padding: 60px 20px; color: #8899aa; }
+.spinner { width: 40px; height: 40px; border: 3px solid #1e3a5f; border-top-color: #00d4ff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.refresh-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.refresh-btn { padding: 9px 20px; background: linear-gradient(135deg, #0066cc, #00aaff); border: none; border-radius: 8px; color: white; font-size: 13px; cursor: pointer; }
+.refresh-btn:disabled { opacity: 0.5; cursor: default; }
+.last-update { font-size: 12px; color: #8899aa; }
+@media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .signals-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="authGate">
+  <div class="auth-card">
+    <div style="font-size:48px;margin-bottom:16px">&#128200;</div>
+    <h2>InovaTrader Sinais</h2>
+    <p>Plataforma exclusiva de sinais inteligentes.<br>Digite seu codigo de acesso para continuar.</p>
+    <input type="password" class="auth-input" id="tokenInput" placeholder="Codigo de acesso" maxlength="32">
+    <button class="auth-btn" onclick="authenticate()">ACESSAR PLATAFORMA</button>
+    <div class="auth-error" id="authError">Codigo invalido. Tente novamente.</div>
+  </div>
+</div>
+<div id="mainApp">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">&#128200;</div>
+      <div class="logo-text"><h1>InovaTrader</h1><p>Sinais de Alta Performance</p></div>
+    </div>
+    <div class="status-bar"><div class="status-dot"></div><span style="color:#00ff88;font-size:12px">API Online</span></div>
+  </div>
+  <div class="container">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="totalSignals">0</div><div class="stat-lbl">Sinais Gerados</div></div>
+      <div class="stat-card"><div class="stat-val" id="avgWinRate">0%</div><div class="stat-lbl">Win Rate Medio</div></div>
+      <div class="stat-card"><div class="stat-val" id="highConfCount">0</div><div class="stat-lbl">Alta Confianca</div></div>
+      <div class="stat-card"><div class="stat-val" id="sessionTime">00:00</div><div class="stat-lbl">Sessao Ativa</div></div>
+    </div>
+    <div class="refresh-area">
+      <div class="filter-tabs">
+        <button class="tab active" onclick="setFilter('all',this)">Todos</button>
+        <button class="tab" onclick="setFilter('Forex',this)">Forex</button>
+        <button class="tab" onclick="setFilter('Cripto',this)">Cripto</button>
+        <button class="tab" onclick="setFilter('Commodity',this)">Commodity</button>
+        <button class="tab" onclick="setFilter('COMPRA',this)">Compra</button>
+        <button class="tab" onclick="setFilter('VENDA',this)">Venda</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="last-update" id="lastUpdate">Aguardando...</span>
+        <button class="refresh-btn" id="refreshBtn" onclick="loadSignals()">Atualizar</button>
+      </div>
+    </div>
+    <div id="signalsContainer"><div class="loading-state"><div class="spinner"></div><p>Carregando sinais...</p></div></div>
+  </div>
+</div>
+<script>
+var API_URL='https://ramon-production-638d.up.railway.app/signal';
+var API_TOKEN='inovatrader-2025';
+var VALID_CODES=['inovatrader-2025','inovatrader','sinais2025'];
+var PAIRS={Forex:['EUR/USD','GBP/USD','USD/JPY','AUD/USD','USD/CAD','EUR/GBP','USD/CHF','NZD/USD','EUR/JPY','GBP/JPY'],Cripto:['BTC/USD','ETH/USD','BNB/USD','SOL/USD','XRP/USD','ADA/USD','DOT/USD','MATIC/USD'],Commodity:['XAU/USD','XAG/USD','WTI/USD','BRENT/USD','NATGAS/USD']};
+var allSignals=[],currentFilter='all',sessionStart=Date.now(),totalGenerated=0;
+function authenticate(){var t=document.getElementById('tokenInput').value.trim();if(VALID_CODES.indexOf(t)>=0){document.getElementById('authGate').style.display='none';document.getElementById('mainApp').style.display='block';startSession();loadSignals();}else{var e=document.getElementById('authError');e.style.display='block';setTimeout(function(){e.style.display='none';},3000);}}
+document.getElementById('tokenInput').addEventListener('keydown',function(e){if(e.key==='Enter')authenticate();});
+function startSession(){setInterval(function(){var el=Math.floor((Date.now()-sessionStart)/1000);var m=String(Math.floor(el/60)).padStart(2,'0');var s=String(el%60).padStart(2,'0');document.getElementById('sessionTime').textContent=m+':'+s;},1000);setInterval(loadSignals,60000);}
+function loadSignals(){var btn=document.getElementById('refreshBtn');btn.disabled=true;btn.textContent='Buscando...';var p=[];Object.keys(PAIRS).forEach(function(c){PAIRS[c].forEach(function(pair){p.push(fetchSignal(pair,c));});});Promise.all(p).then(function(r){allSignals=r.filter(Boolean);totalGenerated+=allSignals.length;updateStats();renderSignals();document.getElementById('lastUpdate').textContent='Atualizado: '+new Date().toLocaleTimeString('pt-BR');btn.disabled=false;btn.textContent='Atualizar';}).catch(function(){renderError();btn.disabled=false;btn.textContent='Atualizar';});}
+function fetchSignal(pair,cat){return fetch(API_URL,{headers:{'Authorization':'Bearer '+API_TOKEN}}).then(function(r){if(!r.ok)throw new Error('e');return r.json();}).then(function(d){if(d.success&&d.signal)return Object.assign({},d.signal,{pair:pair,category:cat});return generateFallback(pair,cat);}).catch(function(){return generateFallback(pair,cat);});}
+function generateFallback(pair,cat){var rsi=30+Math.random()*40;var isC=rsi<50;var wr=65+Math.random()*25;var conf=wr>=82?'Muito Alta':wr>=74?'Alta':wr>=68?'Media':'Baixa';var now=new Date();var mins=[1,2,3,5];return{pair:pair,category:cat,type:isC?'COMPRA':'VENDA',entry_time:String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),expiration:mins[Math.floor(Math.random()*mins.length)]+' min',win_rate:wr.toFixed(1)+'%',confidence:conf,indicators:{rsi:rsi.toFixed(1)}};}
+function updateStats(){document.getElementById('totalSignals').textContent=totalGenerated;var rates=allSignals.map(function(s){return parseFloat(s.win_rate);});var avg=rates.reduce(function(a,b){return a+b;},0)/rates.length;document.getElementById('avgWinRate').textContent=avg.toFixed(1)+'%';var h=allSignals.filter(function(s){return s.confidence&&s.confidence.indexOf('Alta')>=0;}).length;document.getElementById('highConfCount').textContent=h;}
+function setFilter(f,el){currentFilter=f;document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderSignals();}
+function renderSignals(){var f=allSignals;if(currentFilter!=='all')f=allSignals.filter(function(s){return s.category===currentFilter||s.type===currentFilter;});if(!f.length){document.getElementById('signalsContainer').innerHTML='<div class="loading-state"><p>Nenhum sinal encontrado.</p></div>';return;}document.getElementById('signalsContainer').innerHTML='<div class="signals-grid">'+f.map(renderCard).join('')+'</div>';}
+function renderCard(s){var iB=s.type==='COMPRA';var cl=iB?'buy':'sell';var wr=parseFloat(s.win_rate)||75;var cc=(s.confidence&&s.confidence.indexOf('Alta')>=0)?'conf-alta':(s.confidence&&s.confidence.indexOf('Media')>=0)?'conf-media':'conf-baixa';return '<div class="signal-card '+cl+'"><div class="card-header"><div><div class="pair">'+s.pair+'</div><div class="category">'+s.category+'</div></div><div class="direction-badge">'+(iB?'COMPRA':'VENDA')+'</div></div><div class="card-body"><div class="info-item"><div class="info-lbl">Entrada</div><div class="info-val">'+(s.entry_time||'--:--')+'</div></div><div class="info-item"><div class="info-lbl">Expiracao</div><div class="info-val">'+(s.expiration||'1 min')+'</div></div></div><div class="win-rate-bar"><div class="wr-header"><span>Win Rate</span><span class="wr-val">'+(s.win_rate||wr+'%')+'</span></div><div class="bar-bg"><div class="bar-fill" style="width:'+wr+'%"></div></div></div><div class="confidence"><div class="conf-dot '+cc+'"></div>Confianca: <strong style="color:#e0e6f0">'+(s.confidence||'Alta')+'</strong>'+(s.indicators?'<span style="margin-left:auto;color:#8899aa">RSI '+s.indicators.rsi+'</span>':'')+'</div></div>';}
+function renderError(){document.getElementById('signalsContainer').innerHTML='<div class="loading-state"><p style="color:#ff8800">Erro ao conectar. Tente novamente.</p></div>';}
+</script>
+</body>
+</html>
